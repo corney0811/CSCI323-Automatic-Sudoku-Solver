@@ -8,8 +8,9 @@ from an image, recognises the clues, and solves it after we check the recognised
 grid. It then displays the solution, with the added numbers shown in blue.
 
 We're using OpenCV for image processing, Tesseract for digit recognition, and
-backtracking to solve the puzzle. There are two solver versions: plain
-backtracking and MRV with forward checking.
+backtracking to solve the puzzle. There are three solver versions: plain
+backtracking, MRV with forward checking, and MAC (Maintaining Arc Consistency)
+using AC-3.
 
 ## Running the notebook
 
@@ -23,8 +24,9 @@ pytesseract, and ipywidgets.
 2. For a quick demo, leave `USE_DEMO_IMAGE = True` in Step 3.1. To upload your
    own puzzle, change it to `False` before running that cell.
 3. If you only want to try image solving, set `RUN_PUBLIC_BENCHMARK = False`
-   and `RUN_SOLVER_COMPARISON = False` in the benchmark cells. Both are currently
-   enabled and can take several minutes.
+   and `RUN_SOLVER_COMPARISON = False` in the benchmark cells (both default to
+   `False`). Section 9 runs the three-method benchmark automatically; skip that
+   cell if you only want the image demo. Benchmarks can take several minutes.
 4. Run the notebook from top to bottom. It can finish running while waiting
    for you to review the clues.
 5. In Step 3.6, compare all 81 cells with the image. Correct any wrong numbers
@@ -51,7 +53,8 @@ Plain backtracking fills the first empty cell and tries digits 1 to 9. The MRV
 version chooses the empty cell with the fewest legal options. Forward checking
 then removes the chosen digit from the remaining options in neighbouring cells
 that share its row, column, or box. If a cell has no options left, the solver
-backs up and tries another value.
+backs up and tries another value. MAC uses MRV with AC-3 to enforce arc
+consistency before search and after each assignment.
 
 The image-solving button uses MRV with forward checking, with a five-second
 limit and a limit of 2,500,000 candidate attempts. A timeout or search-limit
@@ -67,14 +70,19 @@ Sections 7 and 8 test numeric puzzles from Peter Norvig's
 [easy50](https://norvig.com/easy50.txt) and
 [top95](https://norvig.com/top95.txt) collections. The benchmark uses the first
 ten puzzles from each set, with three repeats per puzzle. Section 8 compares
-both solvers under two search budgets:
+plain backtracking and MRV with forward checking under two search budgets:
 
 | Budget | Time limit | Candidate limit |
 | --- | --- | --- |
 | Original | 1 second | 500,000 |
 | Increased | 5 seconds | 2,500,000 |
 
-The comparison saves raw results, a summary, an experiment manifest, and a
+Section 9 adds the three-method comparison, including MAC, using the same
+puzzles, budgets, and three repeats. It verifies returned solutions, checks that
+inputs remain unchanged, and saves trials to `mac_benchmark_trials.csv`. Run
+Section 8 first to define `COMPARISON_CASES`, even when its benchmark is disabled.
+
+The Section 8 comparison saves raw results, a summary, an experiment manifest, and a
 chart in the runtime's working folder. Download these before ending your Colab
 session if you want to keep them.
 
